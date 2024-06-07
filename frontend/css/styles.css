@@ -58,3 +58,16 @@ li {
   text-decoration: line-through;
   color: #888;
 }
+
+/* Add styles for drag-and-drop */
+li {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  border-bottom: 1px solid #ccc;
+  cursor: move;
+}
+
+li.dragging {
+  opacity: 0.5;
+}

@@ -95,20 +95,23 @@ document.addEventListener("DOMContentLoaded", () => {
     tasks.forEach((task) => {
       addTaskToList(task);
     });
+    addDragAndDrop();
   }
 
   function addTaskToList(task) {
     const li = document.createElement("li");
+    li.setAttribute("draggable", "true");
+    li.dataset.id = task._id;
     li.innerHTML = `
-        <span class="${task.completed ? "completed" : ""}">${task.title}</span>
-        <div>
-          <button class="edit" data-id="${task._id}">Edit</button>
-          <button class="delete" data-id="${task._id}">Delete</button>
-          <button class="complete" data-id="${task._id}">${
+      <span class="${task.completed ? "completed" : ""}">${task.title}</span>
+      <div>
+        <button class="edit" data-id="${task._id}">Edit</button>
+        <button class="delete" data-id="${task._id}">Delete</button>
+        <button class="complete" data-id="${task._id}">${
       task.completed ? "Undo" : "Complete"
     }</button>
-        </div>
-      `;
+      </div>
+    `;
     taskList.appendChild(li);
 
     li.querySelector(".edit").addEventListener("click", () => editTask(task));
@@ -194,5 +197,71 @@ document.addEventListener("DOMContentLoaded", () => {
       filteredTasks = tasks;
     }
     renderTasks(filteredTasks);
+  }
+
+  function addDragAndDrop() {
+    const draggables = document.querySelectorAll('li[draggable="true"]');
+    const container = document.getElementById("task-list");
+
+    draggables.forEach((draggable) => {
+      draggable.addEventListener("dragstart", () => {
+        draggable.classList.add("dragging");
+      });
+
+      draggable.addEventListener("dragend", () => {
+        draggable.classList.remove("dragging");
+        const newOrder = Array.from(container.children).map(
+          (child) => child.dataset.id
+        );
+        updateTaskOrder(newOrder);
+      });
+    });
+
+    container.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      const afterElement = getDragAfterElement(container, e.clientY);
+      const dragging = document.querySelector(".dragging");
+      if (afterElement == null) {
+        container.appendChild(dragging);
+      } else {
+        container.insertBefore(dragging, afterElement);
+      }
+    });
+  }
+
+  function getDragAfterElement(container, y) {
+    const draggableElements = [
+      ...container.querySelectorAll("li:not(.dragging)"),
+    ];
+
+    return draggableElements.reduce(
+      (closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        if (offset < 0 && offset > closest.offset) {
+          return { offset: offset, element: child };
+        } else {
+          return closest;
+        }
+      },
+      { offset: Number.NEGATIVE_INFINITY }
+    ).element;
+  }
+
+  function updateTaskOrder(newOrder) {
+    fetch("http://localhost:3000/api/tasks/reorder", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ order: newOrder }),
+    })
+      .then((response) => response.json())
+      .then((updatedTasks) => {
+        tasks = updatedTasks;
+        renderTasks(tasks);
+      })
+      .catch((error) => console.error("Error:", error));
   }
 });
