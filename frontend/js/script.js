@@ -52,15 +52,23 @@ document.addEventListener("DOMContentLoaded", () => {
       },
       body: JSON.stringify({ username, password }),
     })
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Registration failed");
+        }
+        return response.json();
+      })
       .then((data) => {
         if (data.username) {
           alert("Registration successful! Please log in.");
         } else {
-          alert("Registration failed");
+          alert(data.message || "Registration failed");
         }
       })
-      .catch((error) => console.error("Error:", error));
+      .catch((error) => {
+        alert(error.message);
+        console.error("Error:", error);
+      });
   }
 
   function loginUser(username, password) {
@@ -71,19 +79,26 @@ document.addEventListener("DOMContentLoaded", () => {
       },
       body: JSON.stringify({ username, password }),
     })
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Login failed");
+        }
+        return response.json();
+      })
       .then((data) => {
         if (data.token) {
           token = data.token;
-          loginForm.style.display = "none";
+          document.getElementById("auth-container").style.display = "none";
           taskForm.style.display = "block";
-          filters.style.display = "block";
           fetchTasks();
         } else {
-          alert("Login failed");
+          alert(data.message || "Login failed");
         }
       })
-      .catch((error) => console.error("Error:", error));
+      .catch((error) => {
+        alert(error.message);
+        console.error("Error:", error);
+      });
   }
 
   function fetchTasks() {
