@@ -57,8 +57,6 @@ A simple To-Do List application that allows users to create, edit, delete, and m
 
 ## Notes
 
-Notes
-
 - The application uses MongoDB as the database and Mongoose as the Object Data Modeling (ODM) library.
 - The backend uses Express.js as the web framework and Node.js as the runtime environment.
 - The frontend uses HTML, CSS, and JavaScript for the user interface and user experience.
