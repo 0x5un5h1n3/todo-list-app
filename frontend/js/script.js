@@ -1,8 +1,11 @@
 document.addEventListener("DOMContentLoaded", () => {
+  const loginForm = document.getElementById("login-form");
   const taskForm = document.getElementById("task-form");
   const taskInput = document.getElementById("task-input");
   const taskList = document.getElementById("task-list");
+  const filters = document.getElementById("filters");
   let token = "";
+  let tasks = [];
 
   loginForm.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -16,6 +19,22 @@ document.addEventListener("DOMContentLoaded", () => {
     addTask(taskInput.value);
     taskInput.value = "";
   });
+
+  document
+    .getElementById("sort-asc")
+    .addEventListener("click", () => sortTasks("asc"));
+  document
+    .getElementById("sort-desc")
+    .addEventListener("click", () => sortTasks("desc"));
+  document
+    .getElementById("filter-completed")
+    .addEventListener("click", () => filterTasks("completed"));
+  document
+    .getElementById("filter-pending")
+    .addEventListener("click", () => filterTasks("pending"));
+  document
+    .getElementById("filter-all")
+    .addEventListener("click", () => filterTasks("all"));
 
   function loginUser(username, password) {
     fetch("http://localhost:3000/api/users/login", {
@@ -31,6 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
           token = data.token;
           loginForm.style.display = "none";
           taskForm.style.display = "block";
+          filters.style.display = "block";
           fetchTasks();
         } else {
           alert("Login failed");
@@ -46,11 +66,9 @@ document.addEventListener("DOMContentLoaded", () => {
       },
     })
       .then((response) => response.json())
-      .then((tasks) => {
-        taskList.innerHTML = "";
-        tasks.forEach((task) => {
-          addTaskToList(task);
-        });
+      .then((data) => {
+        tasks = data;
+        renderTasks(tasks);
       })
       .catch((error) => console.error("Error:", error));
   }
@@ -66,23 +84,31 @@ document.addEventListener("DOMContentLoaded", () => {
     })
       .then((response) => response.json())
       .then((task) => {
-        addTaskToList(task);
+        tasks.push(task);
+        renderTasks(tasks);
       })
       .catch((error) => console.error("Error:", error));
+  }
+
+  function renderTasks(tasks) {
+    taskList.innerHTML = "";
+    tasks.forEach((task) => {
+      addTaskToList(task);
+    });
   }
 
   function addTaskToList(task) {
     const li = document.createElement("li");
     li.innerHTML = `
-      <span class="${task.completed ? "completed" : ""}">${task.title}</span>
-      <div>
-        <button class="edit" data-id="${task._id}">Edit</button>
-        <button class="delete" data-id="${task._id}">Delete</button>
-        <button class="complete" data-id="${task._id}">${
+        <span class="${task.completed ? "completed" : ""}">${task.title}</span>
+        <div>
+          <button class="edit" data-id="${task._id}">Edit</button>
+          <button class="delete" data-id="${task._id}">Delete</button>
+          <button class="complete" data-id="${task._id}">${
       task.completed ? "Undo" : "Complete"
     }</button>
-      </div>
-    `;
+        </div>
+      `;
     taskList.appendChild(li);
 
     li.querySelector(".edit").addEventListener("click", () => editTask(task));
@@ -107,7 +133,10 @@ document.addEventListener("DOMContentLoaded", () => {
       })
         .then((response) => response.json())
         .then((updatedTask) => {
-          fetchTasks();
+          tasks = tasks.map((t) =>
+            t._id === updatedTask._id ? updatedTask : t
+          );
+          renderTasks(tasks);
         })
         .catch((error) => console.error("Error:", error));
     }
@@ -121,7 +150,8 @@ document.addEventListener("DOMContentLoaded", () => {
       },
     })
       .then(() => {
-        fetchTasks();
+        tasks = tasks.filter((task) => task._id !== taskId);
+        renderTasks(tasks);
       })
       .catch((error) => console.error("Error:", error));
   }
@@ -137,8 +167,32 @@ document.addEventListener("DOMContentLoaded", () => {
     })
       .then((response) => response.json())
       .then((updatedTask) => {
-        fetchTasks();
+        tasks = tasks.map((t) => (t._id === updatedTask._id ? updatedTask : t));
+        renderTasks(tasks);
       })
       .catch((error) => console.error("Error:", error));
+  }
+
+  function sortTasks(order) {
+    const sortedTasks = [...tasks].sort((a, b) => {
+      if (order === "asc") {
+        return a.title.localeCompare(b.title);
+      } else {
+        return b.title.localeCompare(a.title);
+      }
+    });
+    renderTasks(sortedTasks);
+  }
+
+  function filterTasks(filter) {
+    let filteredTasks;
+    if (filter === "completed") {
+      filteredTasks = tasks.filter((task) => task.completed);
+    } else if (filter === "pending") {
+      filteredTasks = tasks.filter((task) => !task.completed);
+    } else {
+      filteredTasks = tasks;
+    }
+    renderTasks(filteredTasks);
   }
 });
