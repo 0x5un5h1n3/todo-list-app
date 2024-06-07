@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
+  const registerForm = document.getElementById("register-form");
   const loginForm = document.getElementById("login-form");
   const taskForm = document.getElementById("task-form");
   const taskInput = document.getElementById("task-input");
@@ -7,10 +8,17 @@ document.addEventListener("DOMContentLoaded", () => {
   let token = "";
   let tasks = [];
 
+  registerForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const username = document.getElementById("register-username").value;
+    const password = document.getElementById("register-password").value;
+    registerUser(username, password);
+  });
+
   loginForm.addEventListener("submit", (e) => {
     e.preventDefault();
-    const username = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
+    const username = document.getElementById("login-username").value;
+    const password = document.getElementById("login-password").value;
     loginUser(username, password);
   });
 
@@ -35,6 +43,25 @@ document.addEventListener("DOMContentLoaded", () => {
   document
     .getElementById("filter-all")
     .addEventListener("click", () => filterTasks("all"));
+
+  function registerUser(username, password) {
+    fetch("http://localhost:3000/api/users/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ username, password }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.username) {
+          alert("Registration successful! Please log in.");
+        } else {
+          alert("Registration failed");
+        }
+      })
+      .catch((error) => console.error("Error:", error));
+  }
 
   function loginUser(username, password) {
     fetch("http://localhost:3000/api/users/login", {
