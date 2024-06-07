@@ -9,7 +9,12 @@
   <body>
     <div class="container">
       <h1>To-Do List</h1>
-      <form id="task-form">
+      <form id="login-form">
+        <input type="text" id="username" placeholder="Username" required />
+        <input type="password" id="password" placeholder="Password" required />
+        <button type="submit">Login</button>
+      </form>
+      <form id="task-form" style="display: none">
         <input
           type="text"
           id="task-input"
