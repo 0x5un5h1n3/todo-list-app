@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let token = "";
   let tasks = [];
 
+  // Authentication
   registerForm.addEventListener("submit", (e) => {
     e.preventDefault();
     const username = document.getElementById("register-username").value;
@@ -22,12 +23,14 @@ document.addEventListener("DOMContentLoaded", () => {
     loginUser(username, password);
   });
 
+  // Task Management
   taskForm.addEventListener("submit", (e) => {
     e.preventDefault();
     addTask(taskInput.value);
     taskInput.value = "";
   });
 
+  // Filtering and Sorting
   document
     .getElementById("sort-asc")
     .addEventListener("click", () => sortTasks("asc"));
@@ -44,7 +47,8 @@ document.addEventListener("DOMContentLoaded", () => {
     .getElementById("filter-all")
     .addEventListener("click", () => filterTasks("all"));
 
-  function registerUser(username, password) {
+  // Authentication Functions
+  async function registerUser(username, password) {
     fetch("http://localhost:3000/api/users/register", {
       method: "POST",
       headers: {
@@ -71,7 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   }
 
-  function loginUser(username, password) {
+  async function loginUser(username, password) {
     fetch("http://localhost:3000/api/users/login", {
       method: "POST",
       headers: {
@@ -101,7 +105,8 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   }
 
-  function fetchTasks() {
+  // Task Management Functions
+  async function fetchTasks() {
     fetch("http://localhost:3000/api/tasks", {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -115,7 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .catch((error) => console.error("Error:", error));
   }
 
-  function addTask(taskTitle) {
+  async function addTask(taskTitle) {
     fetch("http://localhost:3000/api/tasks", {
       method: "POST",
       headers: {
@@ -305,5 +310,13 @@ document.addEventListener("DOMContentLoaded", () => {
         renderTasks(tasks);
       })
       .catch((error) => console.error("Error:", error));
+  }
+
+  // Check if the user is logged in on page load
+  if (sessionStorage.getItem("token")) {
+    authContainer.style.display = "none";
+    taskForm.style.display = "block";
+    filters.style.display = "block";
+    fetchTasks();
   }
 });
