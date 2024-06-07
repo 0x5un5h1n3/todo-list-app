@@ -52,3 +52,26 @@ exports.deleteTask = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+exports.reorderTasks = async (req, res) => {
+  const { order } = req.body;
+
+  try {
+    const tasks = await Task.find();
+    const taskMap = tasks.reduce((map, task) => {
+      map[task._id] = task;
+      return map;
+    }, {});
+
+    order.forEach((id, index) => {
+      taskMap[id].order = index;
+    });
+
+    await Promise.all(Object.values(taskMap).map((task) => task.save()));
+
+    const updatedTasks = await Task.find().sort({ order: 1 });
+    res.json(updatedTasks);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
